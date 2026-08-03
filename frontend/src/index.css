@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/*
+  Design tokens for the Process-to-Role Intelligence dashboard.
+
+  Direction: a graphite enterprise workspace, not a generic SaaS
+  blue-gradient dashboard. Space Grotesk (technical/geometric) for
+  structure, Inter for body copy, JetBrains Mono reserved specifically
+  for anything that's a literal reference back to the database —
+  activity_id chips, confidence scores, timestamps — so monospace
+  becomes a visual signal for "this is traceable data," not just a
+  stylistic choice.
+
+  impact-* colors are a semantic legend used consistently everywhere
+  an AI impact_type appears (automate / augment / create-new / eliminate).
+*/
+
+@theme {
+  --color-ink: #12141a;
+  --color-surface: #1a1d27;
+  --color-surface-hover: #232733;
+  --color-border: #2c3040;
+  --color-text-primary: #edeef2;
+  --color-text-secondary: #9297a6;
+  --color-text-muted: #6b7080;
+
+  --color-accent: #5b6ef5;
+  --color-accent-hover: #4a5ce0;
+
+  --color-impact-automate: #34d399;
+  --color-impact-augment: #f5b942;
+  --color-impact-create-new: #a78bfa;
+  --color-impact-eliminate: #f2545b;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+}

@@ -164,6 +164,9 @@ class MockClient(LLMClient):
         if "role_name" in bundle and "activities" in bundle:
             role = bundle.get("role_name", "This role")
             summary = bundle.get("impact_summary", {})
+            score = bundle.get("ai_readiness_score")
+            if score is not None:
+                lines.append(f"AI Readiness Score: {score}/100")
             lines.append(
                 f"{role} is involved in {bundle.get('activity_count', 0)} activities "
                 f"across {len(bundle.get('processes_involved', []))} process(es): "
@@ -280,3 +283,30 @@ def get_llm_client() -> LLMClient:
         return _PROVIDER_CLASSES[provider]()
 
     raise ValueError(f"Unknown LLM_PROVIDER: {provider}")
+
+
+FALLBACK_NARRATIVE_NOTICE = (
+    "AI narration is temporarily unavailable — every configured LLM provider "
+    "failed to respond for this request. This is NOT missing data: the full "
+    "evidence this analysis is based on is included below and is exactly "
+    "what would have been narrated. Try again in a moment, or read the "
+    "evidence directly."
+)
+
+
+def safe_generate(llm_client: LLMClient, system: str, user: str) -> str:
+    """
+    Every service call to the LLM goes through this, not llm_client.generate()
+    directly. Even with LLM_PROVIDER=auto, a single-provider pin (e.g.
+    testing with LLM_PROVIDER=ollama) or an unexpected error shape from a
+    provider's API can still raise all the way up as an uncaught exception.
+    This is the last line of defense: a narration failure degrades to a
+    clear, honest notice instead of a 500 mid-demo. The evidence bundle is
+    still returned and still persisted either way — only the prose narration
+    is missing, never the underlying traceable data.
+    """
+    try:
+        return llm_client.generate(system=system, user=user)
+    except Exception as exc:  # noqa: BLE001 — this must never propagate
+        logger.error(f"LLM narration failed even after fallback handling: {exc!r}")
+        return FALLBACK_NARRATIVE_NOTICE

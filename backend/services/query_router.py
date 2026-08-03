@@ -63,12 +63,16 @@ ROLE_LIST_PHRASES = ["what roles", "which roles do you have", "list roles", "lis
 PROCESS_LIST_PHRASES = ["what processes", "which processes", "list processes", "all processes"]
 
 
+NEGATION_CUES = ["not ", "n't ", "cannot", "can not", "won't", "isn't", "aren't", "without", "except", "excluding"]
+
+
 @dataclass
 class RoutedQuestion:
     intent: str
     matched_roles: list[Role] = field(default_factory=list)
     matched_processes: list[Process] = field(default_factory=list)
     impact_type: str | None = None
+    negated: bool = False
 
 
 def _tokenize(text: str) -> list[str]:
@@ -154,7 +158,8 @@ def route_question(db: Session, question: str) -> RoutedQuestion:
         return RoutedQuestion(MULTI_PROCESS_ROLES)
 
     if impact_type and ("activit" in q or "task" in q or "which" in q or "what" in q):
-        return RoutedQuestion(ACTIVITIES_BY_IMPACT, impact_type=impact_type)
+        negated = any(cue in q for cue in NEGATION_CUES)
+        return RoutedQuestion(ACTIVITIES_BY_IMPACT, impact_type=impact_type, negated=negated)
 
     if len(matched_processes) == 1:
         return RoutedQuestion(PROCESS_DETAIL, matched_processes=matched_processes)

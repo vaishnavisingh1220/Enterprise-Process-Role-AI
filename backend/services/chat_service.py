@@ -13,7 +13,7 @@ import json
 
 from sqlalchemy.orm import Session
 
-from ai.client import LLMClient
+from ai.client import LLMClient, safe_generate
 from ai.prompts import CHAT_SYSTEM_PROMPT, build_chat_prompt
 from database.models import AnalysisHistory
 from services import reasoning_engine, query_router
@@ -54,6 +54,15 @@ def gather_evidence(db: Session, routed: RoutedQuestion) -> tuple[dict, int | No
         return {"kind": "multi_process_roles", "count": len(items), "items": items}, None
 
     if routed.intent == ACTIVITIES_BY_IMPACT:
+        if routed.negated:
+            items = reasoning_engine.get_activities_excluding_impact_type(db, routed.impact_type)
+            return {
+                "kind": "activities_excluding_impact_type",
+                "excluded_impact_type": routed.impact_type,
+                "note": f"These activities are everything EXCEPT '{routed.impact_type}' — i.e. what AI will NOT primarily {routed.impact_type}.",
+                "count": len(items),
+                "items": items,
+            }, None
         items = reasoning_engine.get_activities_by_impact_type(db, routed.impact_type)
         return {
             "kind": "activities_by_impact",
@@ -85,7 +94,7 @@ def answer_question(db: Session, llm_client: LLMClient, question: str) -> dict:
     evidence, target_id = gather_evidence(db, routed)
 
     prompt = build_chat_prompt(question, evidence)
-    narrative = llm_client.generate(system=CHAT_SYSTEM_PROMPT, user=prompt)
+    narrative = safe_generate(llm_client, system=CHAT_SYSTEM_PROMPT, user=prompt)
 
     record = AnalysisHistory(
         query_type=f"chat:{routed.intent}",

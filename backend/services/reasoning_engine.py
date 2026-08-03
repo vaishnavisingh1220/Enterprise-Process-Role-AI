@@ -42,6 +42,19 @@ def get_role_by_id(db: Session, role_id: int) -> Optional[Role]:
     return db.query(Role).filter(Role.id == role_id).first()
 
 
+def get_dataset_overview(db: Session) -> dict:
+    """
+    What roles and processes this dataset actually covers. Used as the
+    evidence bundle for out-of-scope chat questions, so the LLM has
+    something real to point the user toward instead of guessing.
+    """
+    return {
+        "roles": [r.name for r in db.query(Role).order_by(Role.name).all()],
+        "processes": [p.name for p in db.query(Process).all()],
+        "impact_types": ["automate", "augment", "eliminate", "create-new"],
+    }
+
+
 def build_role_evidence_bundle(db: Session, role_id: int) -> Optional[dict]:
     """
     The core traversal for the assignment's example query:
@@ -115,6 +128,17 @@ def build_role_evidence_bundle(db: Session, role_id: int) -> Optional[dict]:
         reverse=True,
     )
 
+    # "AI readiness score": the average automation_potential across this
+    # role's activities, expressed 0-100. Deliberately just an average of
+    # numbers already shown per-activity above — not a separate model or
+    # a fabricated statistic, so it stays traceable to the same cited data.
+    impacted_potentials = [
+        a["ai_impact"]["automation_potential"] for a in activities if a["ai_impact"] is not None
+    ]
+    ai_readiness_score = (
+        round(100 * sum(impacted_potentials) / len(impacted_potentials)) if impacted_potentials else None
+    )
+
     return {
         "role_id": role.id,
         "role_name": role.name,
@@ -123,6 +147,7 @@ def build_role_evidence_bundle(db: Session, role_id: int) -> Optional[dict]:
         "processes_involved": list(processes_touched.values()),
         "activity_count": len(activities),
         "impact_summary": dict(impact_counts),  # e.g. {"automate": 3, "augment": 4, "create-new": 1}
+        "ai_readiness_score": ai_readiness_score,  # 0-100; average automation_potential across activities above
         "activities": activities,
     }
 
@@ -180,6 +205,34 @@ def get_activities_by_impact_type(db: Session, impact_type: str) -> list[dict]:
             }
         )
     result.sort(key=lambda a: a["automation_potential"], reverse=True)
+    return result
+
+
+def get_activities_excluding_impact_type(db: Session, impact_type: str) -> list[dict]:
+    """
+    The complement of get_activities_by_impact_type — answers negated
+    questions like "what can AI NOT automate?" correctly, by returning
+    activities whose actual impact_type is anything else, each labeled
+    with its real impact_type so the LLM narrates accurately rather than
+    reusing the same "automate" list and having to talk around it.
+    """
+    impacts = db.query(AIImpact).filter(AIImpact.impact_type != impact_type).all()
+    result = []
+    for impact in impacts:
+        activity = impact.activity
+        roles = [link.role.name for link in activity.role_links]
+        result.append(
+            {
+                "activity_id": activity.id,
+                "activity_name": activity.name,
+                "process_name": activity.process.name,
+                "roles": roles,
+                "impact_type": impact.impact_type,
+                "automation_potential": impact.automation_potential,
+                "confidence_score": impact.confidence_score,
+            }
+        )
+    result.sort(key=lambda a: a["automation_potential"])
     return result
 
 

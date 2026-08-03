@@ -11,7 +11,7 @@ import json
 
 from sqlalchemy.orm import Session
 
-from ai.client import LLMClient
+from ai.client import LLMClient, safe_generate
 from ai.prompts import ROLE_IMPACT_SYSTEM_PROMPT, build_role_impact_prompt
 from database.models import AnalysisHistory
 from services import reasoning_engine
@@ -35,7 +35,7 @@ def synthesize_role_impact(db: Session, llm_client: LLMClient, role_id: int) -> 
         raise AnalysisNotFoundError(f"No role found with id={role_id}")
 
     prompt = build_role_impact_prompt(evidence_bundle)
-    narrative = llm_client.generate(system=ROLE_IMPACT_SYSTEM_PROMPT, user=prompt)
+    narrative = safe_generate(llm_client, system=ROLE_IMPACT_SYSTEM_PROMPT, user=prompt)
 
     record = AnalysisHistory(
         query_type="role_impact",

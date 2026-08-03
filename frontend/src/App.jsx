@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import RoleSelector from "./components/RoleSelector";
 import { getRole, getRoleAnalysis, ApiError } from "./api/client";
+import ChatWidget from "./components/ChatWidget";
 
 const IMPACT_LABELS = {
   automate: "Automate",
@@ -149,7 +150,7 @@ export default function App() {
           Process-to-Role Intelligence
         </h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Select a role to see how AI affects the activities it performs.
+          Select a role to explore its activities, or ask a question in the chat panel.
         </p>
       </header>
 
@@ -239,7 +240,14 @@ export default function App() {
             </div>
           )}
         </main>
+
+        <aside className="w-96 shrink-0">
+          <ChatWidget />
+        </aside>
       </div>
     </div>
   );
 }
+
+
+

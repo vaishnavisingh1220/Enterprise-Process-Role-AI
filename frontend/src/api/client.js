@@ -173,6 +173,36 @@ async function request(path) {
   return response.json();
 }
 
+async function postRequest(path, body) {
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (networkErr) {
+    throw new ApiError(
+      `Could not reach the backend at ${BASE_URL}. Is uvicorn running?`,
+      0,
+      networkErr.message
+    );
+  }
+
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const respBody = await response.json();
+      detail = respBody.detail || "";
+    } catch {
+      /* response wasn't JSON, ignore */
+    }
+    throw new ApiError(`Request to ${path} failed (${response.status})`, response.status, detail);
+  }
+
+  return response.json();
+}
+
 // ---------------------------------------------------------------------------
 // Roles
 // ---------------------------------------------------------------------------
@@ -236,6 +266,31 @@ export function getAnalysisHistory(limit = 50) {
 /** @param {number} analysisId @returns {Promise<AnalysisHistoryDetail>} */
 export function getAnalysisHistoryDetail(analysisId) {
   return request(`/analysis/history/${analysisId}`);
+}
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+/**
+ * @typedef {Object} ChatResponse
+ * @property {number} analysis_id
+ * @property {string} question
+ * @property {string} matched_intent
+ * @property {string[]} matched_roles
+ * @property {string[]} matched_processes
+ * @property {string} answer
+ * @property {Object} evidence
+ * @property {string} created_at
+ */
+
+/**
+ * Free-text Q&A, grounded in the same reasoning engine every other
+ * endpoint uses. Can be slow (LLM call) — always show a loading state.
+ * @param {string} message @returns {Promise<ChatResponse>}
+ */
+export function askChat(message) {
+  return postRequest("/chat/ask", { message });
 }
 
 export { ApiError };

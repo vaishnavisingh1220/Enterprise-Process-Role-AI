@@ -91,3 +91,17 @@ def test_regression_meta_question_matches_no_role(db):
     """'What roles do you have data on?' previously false-matched two unrelated roles."""
     routed = qr.route_question(db, "What roles do you have data on?")
     assert routed.matched_roles == []
+
+
+def test_negation_flips_to_complement(db):
+    """'What can AI NOT automate?' must set negated=True, not silently
+    return the same 'automate' list (found during live stress-testing)."""
+    routed = qr.route_question(db, "What can AI not automate?")
+    assert routed.intent == qr.ACTIVITIES_BY_IMPACT
+    assert routed.impact_type == "automate"
+    assert routed.negated is True
+
+
+def test_non_negated_impact_question_unaffected(db):
+    routed = qr.route_question(db, "What activities will be automated?")
+    assert routed.negated is False

@@ -19,16 +19,26 @@ knowledge, statistics, or claims not present in the JSON.
 2. Every specific claim about an activity must cite its activity_id in \
 square brackets, like [activity_id: 12].
 3. Do not invent automation percentages, confidence scores, or sources \
-beyond what is given.
+beyond what is given. The "ai_readiness_score" field, if present, is \
+already computed for you (the average automation_potential across this \
+role's activities) — report it, don't recalculate or reinterpret it.
 4. If the bundle is sparse or has few activities, say so plainly rather \
 than padding the answer.
-5. Write for a business audience: clear prose, no more than 4 short \
-paragraphs, followed by a short bulleted list of concrete future \
-responsibilities drawn directly from the bundle's future_responsibility \
-fields.
-6. End with one sentence naming the overall trend (e.g. mostly \
-augmentation vs. mostly automation) based on the impact_summary counts \
-in the bundle.
+5. Structure your answer as a short executive summary with these exact \
+sections, using the data already in the bundle:
+   - **AI Readiness Score**: one line stating the score and briefly what \
+it means (higher = more of this role's current work is AI-automatable).
+   - **Current Activities**: one line, the activity_count.
+   - **Activities Automated**: list activities where impact_type is \
+"automate", each with its activity_id citation.
+   - **Activities Augmented**: list activities where impact_type is \
+"augment", each with its activity_id citation.
+   - **New Responsibilities**: list activities where impact_type is \
+"create-new", if any.
+   - **Future Responsibilities**: 2-4 bullets drawn directly from the \
+bundle's future_responsibility fields.
+6. Keep each section to 1-3 short lines per activity — this is a summary, \
+not a report.
 """
 
 

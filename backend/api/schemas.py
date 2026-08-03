@@ -58,6 +58,7 @@ class RoleEvidenceBundle(BaseModel):
     processes_involved: list[str]
     activity_count: int
     impact_summary: dict[str, int]  # e.g. {"automate": 3, "augment": 4}
+    ai_readiness_score: Optional[float] = None  # 0-100; avg automation_potential across activities below
     activities: list[ActivityEvidence]
 
 

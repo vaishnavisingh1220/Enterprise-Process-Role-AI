@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import RoleSelector from "./components/RoleSelector";
 import { getRole, getRoleAnalysis, ApiError } from "./api/client";
 import ChatWidget from "./components/ChatWidget";
-import SurpriseRecordForm from "./components/SurpriseRecordForm";
+import SurpriserecordForm from "./components/SurpriserecordForm";
 import ImpactChart from "./components/ImpactChart";
 
 const IMPACT_LABELS = {

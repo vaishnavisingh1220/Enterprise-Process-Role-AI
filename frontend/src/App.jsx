@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import RoleSelector from "./components/RoleSelector";
 import { getRole, getRoleAnalysis, ApiError } from "./api/client";
 import ChatWidget from "./components/ChatWidget";
+import SurpriseRecordForm from "./components/SurpriseRecordForm";
+import ImpactChart from "./components/ImpactChart";
 
 const IMPACT_LABELS = {
   automate: "Automate",
@@ -143,30 +145,97 @@ export default function App() {
       });
   }
 
+  function handleViewRole(roleId, roleName) {
+    setSelectedRole({
+      role_id: roleId,
+      role_name: roleName,
+    });
+  }
+
   return (
     <div className="min-h-screen bg-ink">
-      <header className="border-b border-border px-8 py-5">
-        <h1 className="font-display text-xl font-bold text-text-primary">
-          Process-to-Role Intelligence
-        </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Select a role to explore its activities, or ask a question in the chat panel.
-        </p>
-      </header>
+      <header className="border-b border-border px-8 py-8">
+  <div className="mx-auto max-w-5xl text-center">
+
+    <span className="inline-flex rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent">
+      Enterprise AI Platform
+    </span>
+
+    <h1 className="mt-4 font-display text-3xl font-bold text-text-primary">
+      Process-to-Role Intelligence
+    </h1>
+
+    <p className="mt-3 text-base leading-relaxed text-text-secondary">
+      Research. Analyze. Persist.
+      <br />
+      Explore how AI transforms enterprise roles, activities, and business
+      processes in real time.
+    </p>
+
+  </div>
+</header>
 
       <div className="flex gap-8 p-8">
-        <aside className="w-64 shrink-0">
-          <RoleSelector onSelect={setSelectedRole} selectedRoleId={selectedRole?.role_id} />
-        </aside>
+      <aside className="w-80 shrink-0 space-y-6">
+  <SurpriseRecordForm
+    onViewRole={handleViewRole}
+  />
+
+  <RoleSelector
+    onSelect={setSelectedRole}
+    selectedRoleId={selectedRole?.role_id}
+  />
+</aside>
 
         <main className="min-w-0 flex-1">
-          {!selectedRole && (
-            <div className="rounded-lg border border-dashed border-border p-12 text-center">
-              <p className="text-sm text-text-secondary">
-                Pick a role on the left to see its activities and AI impact.
-              </p>
-            </div>
-          )}
+        {!selectedRole && (
+  <div className="rounded-xl border border-dashed border-border bg-surface/30 p-12">
+    <div className="mx-auto max-w-lg text-center">
+      <h2 className="font-display text-2xl font-bold text-text-primary">
+        Welcome to Process-to-Role Intelligence
+      </h2>
+
+      <p className="mt-3 text-text-secondary">
+        Explore existing enterprise roles or create a brand-new role,
+        process, or activity to watch the AI pipeline execute live.
+      </p>
+
+      <div className="mt-8 space-y-3 text-left">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
+          <span className="text-green-400">✓</span>
+          <span className="text-sm text-text-primary">
+            Dynamic role & process creation
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
+          <span className="text-green-400">✓</span>
+          <span className="text-sm text-text-primary">
+            Live web research & evidence retrieval
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
+          <span className="text-green-400">✓</span>
+          <span className="text-sm text-text-primary">
+            Explainable AI impact analysis
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3">
+          <span className="text-green-400">✓</span>
+          <span className="text-sm text-text-primary">
+            Persistent enterprise knowledge graph
+          </span>
+        </div>
+      </div>
+
+      <p className="mt-8 text-sm text-text-muted">
+        ← Select an existing role or create a new one to begin.
+      </p>
+    </div>
+  </div>
+)}
 
           {selectedRole && detailStatus === "loading" && (
             <div className="space-y-3" aria-busy="true">
@@ -188,27 +257,84 @@ export default function App() {
           {selectedRole && detailStatus === "ready" && detail && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-display text-lg font-bold text-text-primary">
-                  {detail.role_name}
-                </h2>
-                <p className="mt-1 text-sm text-text-secondary">
-                  {detail.department} · involved in {detail.processes_involved.length} process
-                  {detail.processes_involved.length !== 1 && "es"}:{" "}
-                  {detail.processes_involved.join(", ")}
-                </p>
-                <div className="mt-3">
-                  <ImpactSummaryLegend summary={detail.impact_summary} />
-                </div>
-              </div>
+  <h2 className="font-display text-lg font-bold text-text-primary">
+    {detail.role_name}
+  </h2>
 
-              <div>
-                <button
-                  type="button"
-                  onClick={runAnalysis}
+  <div className="mt-2 flex flex-wrap items-center gap-2">
+    {detail.department === "User-submitted (live demo)" && (
+      <span className="inline-flex items-center rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-400">
+        ● USER SUBMITTED
+      </span>
+    )}
+
+    <span className="text-sm text-text-secondary">
+      Involved in {detail.processes_involved.length} process
+      {detail.processes_involved.length !== 1 && "es"}:{" "}
+      {detail.processes_involved.join(", ")}
+    </span>
+  </div>
+
+  {/* KPI Cards */}
+  <div className="grid grid-cols-2 gap-3 mt-5">
+  <div className="rounded-lg border border-border bg-surface p-4">
+  <p className="text-xs uppercase tracking-wide text-text-muted">
+    AI Impact
+  </p>
+
+  <div className="mt-2 flex items-center gap-2">
+    <ImpactBadge type={Object.keys(detail.impact_summary)[0]} />
+    <span className="text-sm text-text-muted">
+      × {Object.values(detail.impact_summary)[0]}
+    </span>
+  </div>
+</div>
+
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <p className="text-xs uppercase tracking-wide text-text-muted">
+        Activities
+      </p>
+
+      <p className="mt-2 text-2xl font-bold text-text-primary">
+        {detail.activities.length}
+      </p>
+    </div>
+
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <p className="text-xs uppercase tracking-wide text-text-muted">
+        Confidence
+      </p>
+
+      <p className="mt-2 text-2xl font-bold text-text-primary">
+        {Math.round(
+          (detail.activities[0]?.ai_impact?.confidence_score ?? 0) * 100
+        )}
+        %
+      </p>
+    </div>
+
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <p className="text-xs uppercase tracking-wide text-text-muted">
+        Processes
+      </p>
+
+      <p className="mt-2 text-2xl font-bold text-text-primary">
+        {detail.processes_involved.length}
+      </p>
+    </div>
+  </div>
+</div>
+
+<div className="mt-6">
+  <button
+    type="button"
+    onClick={runAnalysis}
                   disabled={analysisStatus === "loading"}
                   className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {analysisStatus === "loading" ? "Running AI analysis…" : "Run AI analysis"}
+                  {analysisStatus === "loading"
+  ? "Generating Executive Report..."
+  : "Generate Executive AI Report"}
                 </button>
 
                 {analysisStatus === "error" && (
@@ -225,7 +351,9 @@ export default function App() {
                     </p>
                   </div>
                 )}
-              </div>
+              </div> 
+
+              <ImpactChart summary={detail.impact_summary} />
 
               <div>
                 <h3 className="mb-3 font-display text-xs font-semibold uppercase tracking-wider text-text-muted">

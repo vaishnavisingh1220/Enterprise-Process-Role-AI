@@ -159,6 +159,36 @@ class ChatResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Dynamic intake — the "Surprise Record" pipeline
+# ---------------------------------------------------------------------------
+
+
+class DynamicActivityRequest(BaseModel):
+    activity_name: str
+    activity_description: str
+    role_name: str  # existing role name, or a brand-new one — either works
+    process_name: str  # existing process name, or a brand-new one — either works
+    frequency: Optional[str] = None
+
+
+class DynamicActivityResponse(BaseModel):
+    activity_id: int
+    role_id: int
+    role_created: bool
+    process_id: int
+    process_created: bool
+    impact_type: str
+    automation_potential: float
+    confidence_score: float
+    rationale: str
+    evidence_source: str
+    future_responsibility: str
+    research_source: str  # "duckduckgo" | "unavailable"
+    research_snippet_count: int
+    parse_failed: bool
+
+
+# ---------------------------------------------------------------------------
 # Misc
 # ---------------------------------------------------------------------------
 

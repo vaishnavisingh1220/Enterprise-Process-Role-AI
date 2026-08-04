@@ -134,6 +134,20 @@ class MockClient(LLMClient):
     """
 
     def generate(self, system: str, user: str) -> str:
+        # Dynamic intake expects raw JSON back (not narrative text) — detect
+        # via the literal marker in the system prompt and return valid mock
+        # JSON, so the full surprise-record pipeline is testable offline.
+        if "TASK: dynamic_activity_analysis" in system:
+            return json.dumps(
+                {
+                    "impact_type": "augment",
+                    "automation_potential": 0.5,
+                    "confidence_score": 0.35,
+                    "rationale": "[MOCK] Offline placeholder judgment — no real LLM was called for this test.",
+                    "future_responsibility": "[MOCK] Placeholder future-responsibility text for offline testing.",
+                }
+            )
+
         try:
             start = user.index("{")
             bundle, _ = json.JSONDecoder().raw_decode(user[start:])

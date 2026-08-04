@@ -293,4 +293,38 @@ export function askChat(message) {
   return postRequest("/chat/ask", { message });
 }
 
+// ---------------------------------------------------------------------------
+// Dynamic intake — the "Surprise Record" pipeline
+// ---------------------------------------------------------------------------
+
+/**
+ * @typedef {Object} DynamicActivityResponse
+ * @property {number} activity_id
+ * @property {number} role_id
+ * @property {boolean} role_created
+ * @property {number} process_id
+ * @property {boolean} process_created
+ * @property {string} impact_type
+ * @property {number} automation_potential
+ * @property {number} confidence_score
+ * @property {string} rationale
+ * @property {string} evidence_source
+ * @property {string} future_responsibility
+ * @property {string} research_source - "duckduckgo" | "unavailable"
+ * @property {number} research_snippet_count
+ * @property {boolean} parse_failed
+ */
+
+/**
+ * Submits a brand-new activity (with a role and/or process that may also
+ * be brand new) for live research + AI analysis + persistence. After this
+ * resolves, the new record is immediately queryable via getRole(role_id)
+ * or askChat() — nothing else needs to happen for it to be "real" data.
+ * @param {{activity_name: string, activity_description: string, role_name: string, process_name: string, frequency?: string}} payload
+ * @returns {Promise<DynamicActivityResponse>}
+ */
+export function analyzeNewActivity(payload) {
+  return postRequest("/dynamic/analyze-activity", payload);
+}
+
 export { ApiError };

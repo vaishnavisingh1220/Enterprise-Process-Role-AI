@@ -5,8 +5,9 @@ const SUGGESTED_QUESTIONS = [
   "How does AI affect the Procurement Manager?",
   "Compare Warehouse Manager and Inventory Analyst",
   "Which roles work across multiple processes?",
-  "What activities will be automated?",
-];
+  "Which roles have the highest automation potential?",
+  "What new responsibilities are emerging because of AI?",
+  ];
 
 let nextId = 1;
 
@@ -71,11 +72,10 @@ export default function ChatWidget() {
     <div className="flex h-[600px] flex-col rounded-lg border border-border bg-surface">
       <div className="border-b border-border px-4 py-3">
         <h2 className="font-display text-sm font-semibold text-text-primary">
-          Ask about AI impact
+        Enterprise Knowledge Assistant
         </h2>
         <p className="mt-0.5 text-xs text-text-muted">
-          Grounded in the same reasoning engine as the rest of this app — every answer traces
-          back to real activity data.
+        Ask questions about roles, processes, AI impact, and future responsibilities using your enterprise knowledge graph.
         </p>
       </div>
 

@@ -1,109 +1,277 @@
-# Process-to-Role Intelligence AI — Backend
+# Process-to-Role Intelligence Backend
 
-## What this is
+FastAPI backend powering the Process-to-Role Intelligence enterprise AI platform.
 
-An enterprise AI application that derives how AI affects organizational
-roles by traversing persisted `Process -> Activity -> Role -> AI Impact`
-relationships. The LLM is used **only** to narrate a pre-computed evidence
-bundle — it never queries the database, decides what's relevant, or
-generates facts on its own. See `services/reasoning_engine.py` for the
-deterministic traversal and `services/ai_synthesis.py` for the narration
-step.
+---
 
-## Architecture
+# Overview
+
+The backend combines deterministic enterprise reasoning with LLM-powered narrative generation.
+
+Unlike traditional AI assistants, all business reasoning is deterministic while Large Language Models are used only for executive summaries and human-readable explanations.
+
+---
+
+# Backend Architecture
 
 ```
-api/            FastAPI routes (thin — no business logic)
-services/
-  reasoning_engine.py   deterministic Role<->Activity<->Process<->AIImpact traversal
-  ai_synthesis.py        combines a reasoning_engine bundle with an LLM call, persists trace
-database/
-  models.py       SQLAlchemy schema
-  seed_data.py     researched seed dataset (Supply Chain & Procurement industry)
-  session.py       FastAPI DB session dependency
-ai/
-  client.py        LLM provider abstraction (Ollama / Groq / Mock)
-  prompts.py       strict narration-only prompt templates
-config/
-  settings.py      environment-driven configuration
-main.py            FastAPI app entrypoint
+                FastAPI
+
+                    │
+
+     ┌──────────────┼───────────────┐
+
+     ▼              ▼               ▼
+
+ REST APIs   Dynamic Intake      Chat API
+
+     │              │               │
+
+     └──────────────┼───────────────┘
+
+                    ▼
+
+     Deterministic Reasoning Engine
+
+          │                  │
+
+          ▼                  ▼
+
+  Research Service     AI Synthesis
+
+          │                  │
+
+          └──────────┬───────┘
+
+                     ▼
+
+          SQLite Enterprise Database
 ```
 
-## Setup
+---
+
+# Project Structure
+
+```
+backend/
+│
+├── ai/
+│   ├── client.py
+│   ├── prompts.py
+│   └── __init__.py
+│
+├── api/
+│   ├── routes/
+│   │   ├── analysis.py
+│   │   ├── chat.py
+│   │   ├── dynamic.py
+│   │   ├── processes.py
+│   │   └── roles.py
+│   │
+│   ├── schemas.py
+│   └── __init__.py
+│
+├── config/
+│   ├── settings.py
+│   └── __init__.py
+│
+├── database/
+│   ├── enterprise_ai.db
+│   ├── models.py
+│   ├── seed_data.py
+│   ├── session.py
+│   └── __init__.py
+│
+├── services/
+│   ├── reasoning_engine.py
+│   ├── query_router.py
+│   ├── dynamic_intake.py
+│   ├── ai_synthesis.py
+│   ├── research_service.py
+│   └── chat_service.py
+│
+├── tests/
+│   ├── conftest.py
+│   ├── test_dynamic_intake.py
+│   └── test_query_router.py
+│
+├── .env
+├── main.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+# Core Features
+
+- Deterministic reasoning engine
+- Dynamic enterprise knowledge creation
+- Live web research
+- Explainable AI impact analysis
+- Executive AI report generation
+- Enterprise conversational assistant
+- Persistent SQLite knowledge graph
+- Multi-model LLM fallback
+- Automated testing
+
+---
+
+# Design Philosophy
+
+The backend separates business reasoning from language generation.
+
+### Deterministic Engine
+
+Responsible for:
+
+- Role traversal
+- Process traversal
+- Activity lookup
+- Question routing
+- Citation generation
+
+No LLM is used for business reasoning.
+
+---
+
+### LLM Layer
+
+Responsible only for:
+
+- Executive summaries
+- Human-readable explanations
+- AI narrative generation
+
+This architecture minimizes hallucinations while keeping explanations natural.
+
+---
+
+# LLM Fallback Strategy
+
+The backend automatically falls back between providers.
+
+```
+Ollama
+   │
+   ▼
+Groq
+   │
+   ▼
+OpenRouter
+   │
+   ▼
+Mock Response
+```
+
+Every fallback event is logged.
+
+---
+
+# Surprise Record Pipeline
+
+Supports runtime enterprise knowledge creation.
+
+```
+User Input
+      │
+      ▼
+Live Research
+      │
+      ▼
+Role Detection
+      │
+      ▼
+Process Detection
+      │
+      ▼
+AI Impact Generation
+      │
+      ▼
+SQLite Persistence
+      │
+      ▼
+Knowledge Graph Update
+```
+
+---
+
+# API Endpoints
+
+## Roles
+
+```
+GET /roles
+GET /roles/{id}
+```
+
+## Analysis
+
+```
+GET /roles/{id}/analysis
+```
+
+## Chat
+
+```
+POST /chat
+```
+
+## Dynamic Intake
+
+```
+POST /dynamic
+```
+
+---
+
+# Running
+
+Install dependencies
 
 ```bash
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 1. Seed the database (one-time, idempotent)
-
-```bash
-cd database
-python seed_data.py
-cd ..
-```
-
-This creates `database/enterprise_ai.db` (SQLite) with the researched
-Supply Chain & Procurement dataset: 3 processes, 8 roles, 28 activities,
-and cited AI-impact judgments. Re-running this script is safe — it
-detects existing data and skips re-seeding.
-
-### 2. Choose an LLM provider
-
-The app defaults to a **local, free** Ollama model. No API key needed.
-
-**Option A — Ollama (recommended, fully local/free)**
-```bash
-# install from https://ollama.com, then:
-ollama pull llama3.1
-ollama serve   # usually runs automatically after install
-```
-No further config needed — `LLM_PROVIDER=ollama` is the default.
-
-**Option B — Groq (hosted, free tier)**
-```bash
-export LLM_PROVIDER=groq
-export GROQ_API_KEY=your_key_here
-```
-
-**Option C — Mock (offline, no model at all)**
-Useful for testing the reasoning engine and API without any LLM running:
-```bash
-export LLM_PROVIDER=mock
-```
-
-### 3. Run the API
+Run
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Visit `http://localhost:8000/docs` for interactive Swagger UI.
+---
 
-## Key endpoints
+# Testing
 
-| Endpoint | LLM involved? | Purpose |
-|---|---|---|
-| `GET /roles` | No | List all roles |
-| `GET /roles/{id}` | No | Role's full evidence bundle (activities, AI impact) — proves the reasoning engine works standalone |
-| `GET /roles/{id}/analysis` | **Yes** | Full pipeline: reasoning engine -> LLM narration -> persisted trace. This is the "Show me how AI could affect a Procurement Manager" endpoint |
-| `GET /roles/multi-process` | No | Roles spanning multiple processes — pure graph query |
-| `GET /processes` | No | List processes |
-| `GET /processes/{id}` | No | Process detail with activities + roles |
-| `GET /processes/impact/{type}` | No | Activities filtered by impact_type (automate/augment/eliminate/create-new) |
-| `GET /analysis/history` | No | Every past AI analysis ever run, most recent first |
-| `GET /analysis/history/{id}` | No | Full stored trace (evidence + narrative) for one past analysis |
+Run all tests
 
-## Why the LLM/reasoning split matters
+```bash
+pytest
+```
 
-Every judge-facing claim in this app traces back to a specific
-`activity_id` in the database. You can demonstrate this live by:
-1. Calling `GET /roles/{id}` — shows the full structured analysis with
-   zero LLM involvement.
-2. Calling `GET /roles/{id}/analysis` — shows the same data narrated by
-   the LLM, with citations like `[activity_id: 12]` tying every claim
-   back to the evidence bundle.
-3. Calling `GET /analysis/history/{id}` afterward — proves the exact
-   evidence bundle used is permanently stored, not regenerated on the fly.
+Current coverage includes:
+
+- Query router
+- Dynamic intake
+- JSON parsing
+- API behavior
+- Reasoning engine
+
+**25 automated tests passing**
+
+---
+
+# Design Principles
+
+- Explainable AI
+- Deterministic reasoning
+- Persistent enterprise knowledge
+- Modular architecture
+- Graceful degradation
+- Enterprise-ready APIs
+
+---
+
+# License
+
+Developed for an Enterprise AI Hackathon as a Minimum Viable Intelligence Product (MVIP).

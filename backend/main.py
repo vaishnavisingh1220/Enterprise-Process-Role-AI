@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from database.session import init
-from api.routes import roles, processes, analysis, chat
+from api.routes import roles, processes, analysis, chat, dynamic
 from api.schemas import HealthResponse
 
 # Without this, ai/client.py's logger.info() calls (which report which LLM
@@ -94,3 +94,4 @@ app.include_router(roles.router)
 app.include_router(processes.router)
 app.include_router(analysis.router)
 app.include_router(chat.router)
+app.include_router(dynamic.router)

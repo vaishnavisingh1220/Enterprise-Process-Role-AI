@@ -85,3 +85,61 @@ def build_chat_prompt(question: str, evidence_bundle: dict) -> str:
         f"{json.dumps(evidence_bundle, indent=2)}\n\n"
         "Answer the user's question using only the evidence above."
     )
+
+
+# ---------------------------------------------------------------------------
+# Dynamic intake — analyzing a brand-new activity not in the pre-seeded
+# dataset ("the Surprise Record"). This is structurally different from
+# every other prompt in this file: the LLM isn't narrating pre-verified
+# cited research, it's generating the FIRST judgment for something that
+# has none yet, optionally grounded in live search results. The system
+# prompt is explicit about that distinction so the output is honestly
+# labeled, not silently blended with the cited seed data.
+# ---------------------------------------------------------------------------
+
+# A literal marker string so the offline MockClient can detect this prompt
+# type and return valid mock JSON, rather than its default narrative format.
+DYNAMIC_ACTIVITY_ANALYSIS_MARKER = "TASK: dynamic_activity_analysis"
+
+DYNAMIC_ANALYSIS_SYSTEM_PROMPT = f"""{DYNAMIC_ACTIVITY_ANALYSIS_MARKER}
+You are an enterprise workforce intelligence assistant analyzing a NEW activity that was just entered live and is NOT part of any pre-researched dataset.
+
+Respond with ONLY a single JSON object — no markdown formatting, no code fences, no commentary before or after. It must match exactly this shape:
+{{
+  "impact_type": "automate" | "augment" | "eliminate" | "create-new",
+  "automation_potential": <number 0.0 to 1.0>,
+  "confidence_score": <number 0.0 to 1.0>,
+  "rationale": "<1-2 sentence explanation, grounded in the research snippets if provided>",
+  "future_responsibility": "<1 sentence on how this role's work shifts as a result>"
+}}
+
+Rules:
+1. If research snippets are provided below, ground your rationale in them and treat them as your primary evidence.
+2. If no research snippets are available, reason from general knowledge of comparable enterprise activities, and set confidence_score no higher than 0.5 to reflect that this judgment is NOT independently verified research, unlike the rest of this application's pre-seeded dataset.
+3. Do not wrap the JSON in markdown code fences. Output the raw JSON object only, nothing else.
+"""
+
+
+def build_dynamic_analysis_prompt(
+    activity_name: str, activity_description: str, role_name: str, process_name: str, research: dict
+) -> str:
+    snippets = research.get("snippets", [])
+    if snippets:
+        research_block = "Research snippets found:\n" + "\n".join(
+            f"- {s['title']}: {s['body'][:300]}" for s in snippets
+        )
+    else:
+        research_block = (
+            "No live research snippets were available for this query "
+            f"({research.get('note', 'reason unknown')}). Reason from general "
+            "knowledge instead, and lower your confidence_score accordingly."
+        )
+
+    return (
+        f"New activity: {activity_name}\n"
+        f"Description: {activity_description}\n"
+        f"Performed by role: {role_name}\n"
+        f"Part of process: {process_name}\n\n"
+        f"{research_block}\n\n"
+        "Analyze this activity's AI impact per the JSON schema in your instructions."
+    )

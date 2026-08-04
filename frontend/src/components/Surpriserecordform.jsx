@@ -26,7 +26,7 @@ const EMPTY_FORM = {
  * @param {Object} props
  * @param {(roleId: number, roleName: string) => void} [props.onViewRole] - called when the user wants to jump to the full role analysis after submission
  */
-export default function SurpriseRecordForm({ onViewRole }) {
+export default function Surpriserecordform({ onViewRole }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [status, setStatus] = useState("idle"); // idle | submitting | done | error
   const [result, setResult] = useState(null);

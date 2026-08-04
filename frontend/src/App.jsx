@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import RoleSelector from "./components/RoleSelector";
 import { getRole, getRoleAnalysis, ApiError } from "./api/client";
 import ChatWidget from "./components/ChatWidget";
-import SurpriserecordForm from "./components/SurpriserecordForm";
+import Surpriserecordform from "./components/Surpriserecordform";
 import ImpactChart from "./components/ImpactChart";
 
 const IMPACT_LABELS = {
@@ -177,7 +177,7 @@ export default function App() {
 
       <div className="flex gap-8 p-8">
       <aside className="w-80 shrink-0 space-y-6">
-  <SurpriseRecordForm
+  <Surpriserecordform
     onViewRole={handleViewRole}
   />
 
